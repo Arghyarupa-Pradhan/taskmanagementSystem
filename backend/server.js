@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger");
 require("dotenv").config();
 
 const taskRoutes = require("./routes/taskRoutes");
@@ -11,6 +13,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Task routes
 app.use("/api/tasks", taskRoutes);

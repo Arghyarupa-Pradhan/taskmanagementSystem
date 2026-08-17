@@ -8,7 +8,6 @@ const createTask = async (req, res) => {
   taskName,
   creationDate,
   time,
-  priority,
   completed,
   note,
 } = req.body;
@@ -18,7 +17,6 @@ const task = await Task.create({
   taskName,
   creationDate,
   time,
-  priority,
   completed: completed ?? false,
   note,
   user: req.user.id,
