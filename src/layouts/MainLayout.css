@@ -1,0 +1,101 @@
+/* =========================
+   TOP RIGHT USER
+========================= */
+
+.user-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+
+/* Avatar button */
+
+.user-avatar-button {
+  appearance: none;
+  -webkit-appearance: none;
+
+  background: transparent;
+
+  border: none;
+
+  outline: none;
+
+  padding: 0;
+  margin: 0;
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  box-shadow: none;
+}
+
+
+/* Remove square/border when clicked */
+
+.user-avatar-button:hover,
+.user-avatar-button:focus,
+.user-avatar-button:focus-visible,
+.user-avatar-button:active {
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+
+/* Avatar */
+
+.user-avatar-button .avatar {
+  width: 32px;
+  height: 32px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+
+/* =========================
+   EMAIL POPUP
+========================= */
+
+.user-email-popup {
+  position: absolute;
+
+  top: 42px;
+  right: 0;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 8px;
+
+  padding: 10px 14px;
+
+  min-width: 200px;
+
+  color: #222222;
+
+  font-size: 14px;
+
+  font-weight: 500;
+
+  white-space: nowrap;
+
+  box-shadow:
+    0 5px 15px rgba(0, 0, 0, 0.12);
+
+  z-index: 9999;
+}

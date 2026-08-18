@@ -1,0 +1,139 @@
+
+
+/* Task list */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.task-row--new {
+  border-style: dashed;
+}
+
+.task-row--done .task-row__input {
+  /* text-decoration: line-through; */
+  color: #090909;
+}
+
+.task-row__input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 1em;
+}
+.task-row--new .task-row__input {
+  width: 600px;
+  flex: none;
+  height: 42px;
+  padding: 8px 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.task-row__input:not([readonly]) {
+  border-color: #ccc;
+  background: #fff;
+}
+
+.task-row__input[readonly] {
+  background: transparent;
+  cursor: default;
+}
+
+.task-row__checkbox {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.task-list__empty {
+  color: #888;
+  padding: 16px 0;
+}
+
+/* =========================
+   TASK ACTION ICONS
+========================= */
+
+.task-icon-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.task-edit-btn {
+  font-size: 20px;
+}
+
+.task-delete-btn {
+  font-size: 18px;
+}
+.notes-section {
+  margin-top: 30px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+
+.notes-section h2 {
+  margin: 0 0 15px;
+  font-size: 20px;
+}
+
+.notes-input {
+  width: 100%;
+  min-height: 140px;
+  padding: 12px;
+
+  border: 1px solid #ccc;
+  border-radius: 6px;
+
+  font-family: inherit;
+  font-size: 15px;
+
+  resize: vertical;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.notes-input:focus {
+  border-color: #999;
+}
+
+.notes-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+.task-row__date {
+  height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
