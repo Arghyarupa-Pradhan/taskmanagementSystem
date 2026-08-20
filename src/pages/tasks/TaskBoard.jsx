@@ -1,313 +1,991 @@
 import { useState } from "react";
 import { useTasks } from "../../hooks";
-import { TASK_STATUS } from "../../constants";
 import Button from "../../components/Button";
 import Loader from "../../components/Loader";
 import "./TaskBoard.css";
 
 export default function TaskBoard() {
-  const { tasks, loading, addTask, editTask, removeTask } = useTasks();
+  const {
+    tasks,
+    loading,
+    addTask,
+    editTask,
+    removeTask,
+  } = useTasks();
 
-  const [newRows, setNewRows] = useState([]);
+  // =========================================================
+  // ADD FORM
+  // =========================================================
+
+  const [showAdd, setShowAdd] = useState(false);
+
+  const [newTask, setNewTask] = useState({
+    projectName: "",
+    module: "",
+    task: "",
+    priority: "",
+    status: "In Progress",
+    timeSpent: "",
+  });
+
+  // =========================================================
+  // EDIT
+  // =========================================================
+
   const [editingId, setEditingId] = useState(null);
-  const [editingTitle, setEditingTitle] = useState("");
 
-  // Add a new empty row
-  function handleAddRow() {
-    setNewRows((rows) => [
-      ...rows,
-      {
-        tempId: `new-${Date.now()}`,
-        title: "",
-        dueDate: "",
-      },
-    ]);
-  }
+  const [editingTask, setEditingTask] = useState({
+    projectName: "",
+    module: "",
+    task: "",
+    priority: "",
+    status: "In Progress",
+    timeSpent: "",
+  });
 
-  // Change new task title
-  function handleNewRowChange(tempId, value) {
-    setNewRows((rows) =>
-      rows.map((row) =>
-        row.tempId === tempId
-          ? { ...row, title: value }
-          : row
-      )
-    );
-  }
+  // =========================================================
+  // OPEN ADD FORM
+  // =========================================================
 
-  // Change new task due date
-  function handleNewRowDateChange(tempId, value) {
-    setNewRows((rows) =>
-      rows.map((row) =>
-        row.tempId === tempId
-          ? { ...row, dueDate: value }
-          : row
-      )
-    );
-  }
+  function handleAdd() {
+    setShowAdd(true);
 
-  // Save new task
-  async function handleSaveNewRow(tempId) {
-    const row = newRows.find((row) => row.tempId === tempId);
-
-    if (!row || !row.title.trim()) {
-      return;
-    }
-
-    try {
-      await addTask({
-        title: row.title.trim(),
-        status: TASK_STATUS.TODO,
-        dueDate: row.dueDate,
-      });
-
-      // Remove temporary row only after successful backend save
-      setNewRows((rows) =>
-        rows.filter((row) => row.tempId !== tempId)
-      );
-    } catch (error) {
-      console.error("Failed to save task:", error);
-      alert("Failed to save task. Please check the backend.");
-    }
-  }
-
-  // Cancel new task
-  function handleCancelNewRow(tempId) {
-    setNewRows((rows) =>
-      rows.filter((row) => row.tempId !== tempId)
-    );
-  }
-
-  // Toggle task complete/incomplete
-  function handleToggleComplete(task) {
-    editTask(task.id, {
-      status:
-        task.status === TASK_STATUS.DONE
-          ? TASK_STATUS.TODO
-          : TASK_STATUS.DONE,
+    setNewTask({
+      projectName: "",
+      module: "",
+      task: "",
+      priority: "",
+      status: "In Progress",
+      timeSpent: "",
     });
   }
 
-  // Start editing
-  function startEdit(task) {
-    setEditingId(task.id);
-    setEditingTitle(task.title);
+  // =========================================================
+  // HANDLE NEW TASK INPUT
+  // =========================================================
+
+  function handleNewTaskChange(e) {
+    const { name, value } = e.target;
+
+    setNewTask((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   }
 
-  // Save edited task
-  function saveEdit(task) {
-    if (editingTitle.trim()) {
-      editTask(task.id, {
-        title: editingTitle.trim(),
-      });
+  // =========================================================
+  // SAVE NEW TASK
+  // =========================================================
+
+  async function handleSave() {
+    const projectName = newTask.projectName.trim();
+    const moduleName = newTask.module.trim();
+    const task = newTask.task.trim();
+    const timeSpent = newTask.timeSpent.trim();
+
+    // =======================================================
+    // REQUIRED VALIDATION
+    // =======================================================
+
+    if (!projectName) {
+      alert("Please enter project name.");
+      return;
     }
 
-    setEditingId(null);
-    setEditingTitle("");
+    if (!moduleName) {
+      alert("Please enter module.");
+      return;
+    }
+
+    if (!task) {
+      alert("Please enter task.");
+      return;
+    }
+
+    // =======================================================
+    // CREATE TASK
+    // Priority is OPTIONAL
+    // =======================================================
+
+    try {
+      await addTask({
+        projectName,
+        module: moduleName,
+        task,
+        priority: newTask.priority,
+        status: newTask.status,
+        timeSpent,
+      });
+
+      // Reset form
+      setNewTask({
+        projectName: "",
+        module: "",
+        task: "",
+        priority: "",
+        status: "In Progress",
+        timeSpent: "",
+      });
+
+      setShowAdd(false);
+    } catch (error) {
+      console.error(
+        "Failed to create task:",
+        error
+      );
+
+      alert(
+        error?.response?.data?.message ||
+          "Failed to save task."
+      );
+    }
   }
 
-  // Cancel editing
-  function cancelEdit() {
-    setEditingId(null);
-    setEditingTitle("");
+  // =========================================================
+  // CANCEL ADD
+  // =========================================================
+
+  function handleCancel() {
+    setNewTask({
+      projectName: "",
+      module: "",
+      task: "",
+      priority: "",
+      status: "In Progress",
+      timeSpent: "",
+    });
+
+    setShowAdd(false);
   }
 
-  // Loading screen
+  // =========================================================
+  // START EDIT
+  // =========================================================
+
+  function handleEdit(task) {
+    const taskId = task.id || task._id;
+
+    setEditingId(taskId);
+
+    setEditingTask({
+      projectName: task.projectName || "",
+
+      module: task.module || "",
+
+      task:
+        task.taskName ||
+        task.task ||
+        "",
+
+      priority: task.priority || "",
+
+      status:
+        task.status ||
+        "In Progress",
+
+      timeSpent:
+        task.timeSpent ||
+        "",
+    });
+  }
+
+  // =========================================================
+  // HANDLE EDIT INPUT
+  // =========================================================
+
+  function handleEditChange(e) {
+    const { name, value } = e.target;
+
+    setEditingTask((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  // =========================================================
+  // SAVE EDIT
+  // =========================================================
+
+  async function handleSaveEdit(task) {
+    const taskId = task.id || task._id;
+
+    const projectName =
+      editingTask.projectName.trim();
+
+    const moduleName =
+      editingTask.module.trim();
+
+    const taskName =
+      editingTask.task.trim();
+
+    const timeSpent =
+      editingTask.timeSpent.trim();
+
+    // =======================================================
+    // REQUIRED VALIDATION
+    // =======================================================
+
+    if (!projectName) {
+      alert("Project name is required.");
+      return;
+    }
+
+    if (!moduleName) {
+      alert("Module is required.");
+      return;
+    }
+
+    if (!taskName) {
+      alert("Task is required.");
+      return;
+    }
+
+    // =======================================================
+    // UPDATE TASK
+    // Priority is OPTIONAL
+    // =======================================================
+
+    try {
+      await editTask(taskId, {
+        projectName,
+        module: moduleName,
+        task: taskName,
+        priority: editingTask.priority,
+        status: editingTask.status,
+        timeSpent,
+      });
+
+      setEditingId(null);
+
+      setEditingTask({
+        projectName: "",
+        module: "",
+        task: "",
+        priority: "",
+        status: "In Progress",
+        timeSpent: "",
+      });
+    } catch (error) {
+      console.error(
+        "Failed to update task:",
+        error
+      );
+
+      alert(
+        error?.response?.data?.message ||
+          "Failed to update task."
+      );
+    }
+  }
+
+  // =========================================================
+  // CANCEL EDIT
+  // =========================================================
+
+  function handleCancelEdit() {
+    setEditingId(null);
+
+    setEditingTask({
+      projectName: "",
+      module: "",
+      task: "",
+      priority: "",
+      status: "In Progress",
+      timeSpent: "",
+    });
+  }
+
+  // =========================================================
+  // DELETE TASK
+  // =========================================================
+
+  async function handleDelete(task) {
+    const confirmDelete =
+      window.confirm(
+        "Are you sure you want to delete this task?"
+      );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    const taskId =
+      task.id || task._id;
+
+    try {
+      await removeTask(taskId);
+    } catch (error) {
+      console.error(
+        "Failed to delete task:",
+        error
+      );
+
+      alert(
+        error?.response?.data?.message ||
+          "Failed to delete task."
+      );
+    }
+  }
+
+  // =========================================================
+  // LOADING
+  // =========================================================
+
   if (loading) {
     return (
       <div className="page-loader">
-        <Loader label="Loading tasks…" />
+        <Loader label="Loading tasks..." />
       </div>
     );
   }
 
-  return (
-    <div className="page">
-      {/* Page header */}
-      <div className="page__header">
-        <h1>Tasks</h1>
+  // =========================================================
+  // PAGE
+  // =========================================================
 
-        <Button onClick={handleAddRow}>
+  return (
+    <div className="page task-page">
+
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
+
+      <div className="page__header">
+
+        <h1>
+          Tasks
+        </h1>
+
+        {/* ADD BUTTON ALWAYS VISIBLE */}
+
+        <Button onClick={handleAdd}>
           + Add
         </Button>
+
       </div>
 
-      {/* Task list */}
-      <div className="task-list">
 
-        {/* Existing tasks */}
-        {tasks.map((task) => {
-          const isEditing = editingId === task.id;
-          const isDone = task.status === TASK_STATUS.DONE;
+      {/* =====================================================
+          ADD TASK FORM
+      ===================================================== */}
 
-          return (
-            <div
-              className={`task-row${
-                isDone ? " task-row--done" : ""
-              }`}
-              key={task.id}
-            >
-              {/* Task title */}
+      {showAdd && (
+        <div className="task-form">
+
+          <h2>
+            Add Task
+          </h2>
+
+
+          {/* =================================================
+              ROW 1
+              PROJECT NAME + MODULE
+          ================================================= */}
+
+          <div className="task-form__grid task-form__grid--two">
+
+            {/* PROJECT NAME */}
+
+            <div className="task-form__field">
+
+              <label>
+                Project Name
+              </label>
+
               <input
-                className="task-row__input"
+                type="text"
+                name="projectName"
+                placeholder="Enter project name..."
                 value={
-                  isEditing
-                    ? editingTitle
-                    : task.title
+                  newTask.projectName
                 }
-                readOnly={!isEditing}
-                onChange={(e) =>
-                  setEditingTitle(e.target.value)
+                onChange={
+                  handleNewTaskChange
                 }
-                onKeyDown={(e) => {
-                  if (!isEditing) return;
-
-                  if (e.key === "Enter") {
-                    saveEdit(task);
-                  }
-
-                  if (e.key === "Escape") {
-                    cancelEdit();
-                  }
-                }}
+                autoFocus
               />
 
-              {/* Complete checkbox */}
-              <input
-                type="checkbox"
-                className="task-row__checkbox"
-                checked={isDone}
-                onChange={() =>
-                  handleToggleComplete(task)
-                }
-                aria-label={
-                  isDone
-                    ? "Mark task incomplete"
-                    : "Mark task complete"
-                }
-              />
-
-              {/* Edit / Save / Cancel */}
-              {isEditing ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    onClick={() => saveEdit(task)}
-                  >
-                    Save
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    onClick={cancelEdit}
-                  >
-                    Cancel
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="ghost"
-                  className="task-icon-btn task-edit-btn"
-                  onClick={() => startEdit(task)}
-                  aria-label="Edit task"
-                  title="Edit task"
-                >
-                  ✎
-                </Button>
-              )}
-
-              {/* Delete */}
-              <Button
-                variant="danger"
-                className="task-icon-btn task-delete-btn"
-                onClick={() => removeTask(task.id)}
-                aria-label="Delete task"
-                title="Delete task"
-              >
-                🗑
-              </Button>
             </div>
-          );
-        })}
 
-        {/* New task rows */}
-        {newRows.map((row) => (
-          <div
-            className="task-row task-row--new"
-            key={row.tempId}
-          >
-            {/* New task title */}
-            <input
-              className="task-row__input"
-              autoFocus
-              placeholder="Type a new task…"
-              value={row.title}
-              onChange={(e) =>
-                handleNewRowChange(
-                  row.tempId,
-                  e.target.value
-                )
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSaveNewRow(row.tempId);
+
+            {/* MODULE */}
+
+            <div className="task-form__field">
+
+              <label>
+                Module
+              </label>
+
+              <input
+                type="text"
+                name="module"
+                placeholder="Enter module..."
+                value={
+                  newTask.module
                 }
-
-                if (e.key === "Escape") {
-                  handleCancelNewRow(row.tempId);
+                onChange={
+                  handleNewTaskChange
                 }
-              }}
-            />
+              />
 
-            {/* Due date */}
-            <input
-              type="date"
-              className="task-row__date"
-              value={row.dueDate || ""}
-              onChange={(e) =>
-                handleNewRowDateChange(
-                  row.tempId,
-                  e.target.value
-                )
+            </div>
+
+          </div>
+
+
+          {/* =================================================
+              ROW 2
+              TASK
+          ================================================= */}
+
+          <div className="task-form__field">
+
+            <label>
+              Task
+            </label>
+
+            <textarea
+              name="task"
+              placeholder="Enter task..."
+              value={
+                newTask.task
               }
+              onChange={
+                handleNewTaskChange
+              }
+              rows="3"
             />
 
-            {/* Disabled checkbox for new task */}
-            <input
-              type="checkbox"
-              className="task-row__checkbox"
-              disabled
-            />
+          </div>
 
-            {/* Save */}
+
+          {/* =================================================
+              ROW 3
+              PRIORITY + STATUS + TIME SPENT
+          ================================================= */}
+
+          <div className="task-form__grid task-form__grid--three">
+
+            {/* PRIORITY - OPTIONAL */}
+
+            <div className="task-form__field">
+
+              <label>
+                Priority
+              </label>
+
+              <select
+                name="priority"
+                value={
+                  newTask.priority
+                }
+                onChange={
+                  handleNewTaskChange
+                }
+              >
+
+                <option value="">
+                  Select Priority (Optional)
+                </option>
+
+                <option value="Low">
+                  Low
+                </option>
+
+                <option value="Medium">
+                  Medium
+                </option>
+
+                <option value="High">
+                  High
+                </option>
+
+              </select>
+
+            </div>
+
+
+            {/* STATUS */}
+
+            <div className="task-form__field">
+
+              <label>
+                Status
+              </label>
+
+              <select
+                name="status"
+                value={
+                  newTask.status
+                }
+                onChange={
+                  handleNewTaskChange
+                }
+              >
+
+                <option value="Pending">
+                  Pending
+                </option>
+
+                <option value="In Progress">
+                  In Progress
+                </option>
+
+                <option value="Completed">
+                  Completed
+                </option>
+
+              </select>
+
+            </div>
+
+
+            {/* TIME SPENT */}
+
+            <div className="task-form__field">
+
+              <label>
+                Time Spent
+              </label>
+
+              <input
+                type="text"
+                name="timeSpent"
+                placeholder="e.g. 2 hours"
+                value={
+                  newTask.timeSpent
+                }
+                onChange={
+                  handleNewTaskChange
+                }
+              />
+
+            </div>
+
+          </div>
+
+
+          {/* =================================================
+              ACTIONS
+          ================================================= */}
+
+          <div className="task-form__actions">
+
             <Button
-              onClick={() =>
-                handleSaveNewRow(row.tempId)
-              }
+              onClick={handleSave}
             >
               Save
             </Button>
 
-            {/* Cancel */}
             <Button
               variant="ghost"
-              onClick={() =>
-                handleCancelNewRow(row.tempId)
-              }
+              onClick={handleCancel}
             >
               Cancel
             </Button>
-          </div>
-        ))}
 
-        {/* Empty state */}
+          </div>
+
+        </div>
+      )}
+
+
+      {/* =====================================================
+          TASK LIST
+      ===================================================== */}
+
+      <div className="task-list">
+
+        {tasks.map((task) => {
+
+          const taskId =
+            task.id || task._id;
+
+          const isEditing =
+            editingId === taskId;
+
+          return (
+            <div
+              className="task-item"
+              key={taskId}
+            >
+
+              {/* =================================================
+                  EDIT MODE
+              ================================================= */}
+
+              {isEditing ? (
+
+                <div className="task-form task-form--edit">
+
+                  <h2>
+                    Edit Task
+                  </h2>
+
+
+                  {/* =================================================
+                      ROW 1
+                      PROJECT NAME + MODULE
+                  ================================================= */}
+
+                  <div className="task-form__grid task-form__grid--two">
+
+                    {/* PROJECT NAME */}
+
+                    <div className="task-form__field">
+
+                      <label>
+                        Project Name
+                      </label>
+
+                      <input
+                        type="text"
+                        name="projectName"
+                        value={
+                          editingTask.projectName
+                        }
+                        onChange={
+                          handleEditChange
+                        }
+                      />
+
+                    </div>
+
+
+                    {/* MODULE */}
+
+                    <div className="task-form__field">
+
+                      <label>
+                        Module
+                      </label>
+
+                      <input
+                        type="text"
+                        name="module"
+                        value={
+                          editingTask.module
+                        }
+                        onChange={
+                          handleEditChange
+                        }
+                      />
+
+                    </div>
+
+                  </div>
+
+
+                  {/* =================================================
+                      ROW 2
+                      TASK
+                  ================================================= */}
+
+                  <div className="task-form__field">
+
+                    <label>
+                      Task
+                    </label>
+
+                    <textarea
+                      name="task"
+                      value={
+                        editingTask.task
+                      }
+                      onChange={
+                        handleEditChange
+                      }
+                      rows="3"
+                    />
+
+                  </div>
+
+
+                  {/* =================================================
+                      ROW 3
+                      PRIORITY + STATUS + TIME SPENT
+                  ================================================= */}
+
+                  <div className="task-form__grid task-form__grid--three">
+
+                    {/* PRIORITY - OPTIONAL */}
+
+                    <div className="task-form__field">
+
+                      <label>
+                        Priority
+                      </label>
+
+                      <select
+                        name="priority"
+                        value={
+                          editingTask.priority
+                        }
+                        onChange={
+                          handleEditChange
+                        }
+                      >
+
+                        <option value="">
+                          Select Priority (Optional)
+                        </option>
+
+                        <option value="Low">
+                          Low
+                        </option>
+
+                        <option value="Medium">
+                          Medium
+                        </option>
+
+                        <option value="High">
+                          High
+                        </option>
+
+                      </select>
+
+                    </div>
+
+
+                    {/* STATUS */}
+
+                    <div className="task-form__field">
+
+                      <label>
+                        Status
+                      </label>
+
+                      <select
+                        name="status"
+                        value={
+                          editingTask.status
+                        }
+                        onChange={
+                          handleEditChange
+                        }
+                      >
+
+                        <option value="Pending">
+                          Pending
+                        </option>
+
+                        <option value="In Progress">
+                          In Progress
+                        </option>
+
+                        <option value="Completed">
+                          Completed
+                        </option>
+
+                      </select>
+
+                    </div>
+
+
+                    {/* TIME SPENT */}
+
+                    <div className="task-form__field">
+
+                      <label>
+                        Time Spent
+                      </label>
+
+                      <input
+                        type="text"
+                        name="timeSpent"
+                        placeholder="e.g. 2 hours"
+                        value={
+                          editingTask.timeSpent
+                        }
+                        onChange={
+                          handleEditChange
+                        }
+                      />
+
+                    </div>
+
+                  </div>
+
+
+                  {/* =================================================
+                      EDIT ACTIONS
+                  ================================================= */}
+
+                  <div className="task-form__actions">
+
+                    <Button
+                      onClick={() =>
+                        handleSaveEdit(task)
+                      }
+                    >
+                      Save
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      onClick={
+                        handleCancelEdit
+                      }
+                    >
+                      Cancel
+                    </Button>
+
+                  </div>
+
+                </div>
+
+              ) : (
+
+                /* =================================================
+                   NORMAL TASK CARD
+                ================================================= */
+
+                <div className="task-card">
+
+                  {/* =================================================
+                      HEADER
+                  ================================================= */}
+
+                  <div className="task-card__header">
+
+                    <div>
+
+                      <h3>
+                        {task.projectName ||
+                          "No project"}
+                      </h3>
+
+                      <p>
+                        {task.module ||
+                          "No module"}
+                      </p>
+
+                    </div>
+
+
+                    {/* ONLY SHOW PRIORITY IF SELECTED */}
+
+                    {task.priority && (
+                      <span
+                        className={`priority priority--${task.priority.toLowerCase()}`}
+                      >
+                        {task.priority}
+                      </span>
+                    )}
+
+                  </div>
+
+
+                  {/* =================================================
+                      BODY
+                      TASK + STATUS + TIME SPENT
+                      ONE HORIZONTAL LINE
+                  ================================================= */}
+
+                  <div className="task-card__body task-card__body--horizontal">
+
+                    {/* TASK */}
+
+                    <div className="task-card__info">
+
+                      <strong>
+                        Task
+                      </strong>
+
+                      <span>
+                        {task.taskName ||
+                          task.task ||
+                          "No task"}
+                      </span>
+
+                    </div>
+
+
+                    {/* STATUS */}
+
+                    <div className="task-card__info">
+
+                      <strong>
+                        Status
+                      </strong>
+
+                      <span>
+                        {task.status ||
+                          "In Progress"}
+                      </span>
+
+                    </div>
+
+
+                    {/* TIME SPENT */}
+
+                    <div className="task-card__info">
+
+                      <strong>
+                        Time Spent
+                      </strong>
+
+                      <span>
+                        {task.timeSpent ||
+                          "-"}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+
+                  {/* =================================================
+                      ACTIONS
+                  ================================================= */}
+
+                  <div className="task-card__actions">
+
+                    <Button
+                      variant="ghost"
+                      onClick={() =>
+                        handleEdit(task)
+                      }
+                    >
+                      ✎ Edit
+                    </Button>
+
+                    <Button
+                      variant="danger"
+                      onClick={() =>
+                        handleDelete(task)
+                      }
+                    >
+                      🗑 Delete
+                    </Button>
+
+                  </div>
+
+                </div>
+
+              )}
+
+            </div>
+          );
+        })}
+
+
+        {/* =====================================================
+            EMPTY
+        ===================================================== */}
+
         {tasks.length === 0 &&
-          newRows.length === 0 && (
+          !showAdd && (
+
             <p className="task-list__empty">
-              No tasks yet. Click “+ Add” to create one.
+              No tasks yet. Click "+ Add"
+              to create one.
             </p>
+
           )}
+
       </div>
+
     </div>
   );
 }

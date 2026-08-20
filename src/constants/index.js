@@ -49,4 +49,5 @@ export const ROUTES = {
   TASK_DETAIL: "/tasks/:id",
   REPORT: "/report",
   PROFILE: "/profile",
+  REGISTER: "/register",  
 };

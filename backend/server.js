@@ -1,8 +1,17 @@
+const dns = require("dns");
+
+// Use public DNS servers for MongoDB SRV lookup
+dns.setServers([
+  "8.8.8.8",
+  "1.1.1.1",
+]);
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
+
 require("dotenv").config();
 
 const taskRoutes = require("./routes/taskRoutes");
@@ -10,31 +19,87 @@ const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// ==========================================
+// MIDDLEWARE
+// ==========================================
 
-// Task routes
+app.use(cors());
+
+app.use(express.json());
+
+// ==========================================
+// SWAGGER
+// ==========================================
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
+
+// ==========================================
+// ROUTES
+// ==========================================
+
 app.use("/api/tasks", taskRoutes);
+
 app.use("/api/auth", authRoutes);
 
-// Test route
+// ==========================================
+// TEST ROUTE
+// ==========================================
+
 app.get("/", (req, res) => {
   res.json({
     message: "Task Management Backend is running 🚀",
   });
 });
 
-// MongoDB connection
+// ==========================================
+// ENV CHECK
+// ==========================================
+
+console.log(
+  "MONGO_URI exists:",
+  !!process.env.MONGO_URI
+);
+
+console.log(
+  "JWT_SECRET exists:",
+  !!process.env.JWT_SECRET
+);
+
+// ==========================================
+// PORT
+// ==========================================
+
+const PORT = process.env.PORT || 5000;
+
+// ==========================================
+// MONGODB CONNECTION
+// ==========================================
+
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    family: 4,
+    serverSelectionTimeoutMS: 10000,
+  })
   .then(() => {
     console.log("✅ MongoDB connected");
-    app.listen(5000, () => {
-      console.log("🚀 Server running on port 5000");
+
+    // ==========================================
+    // START SERVER
+    // ==========================================
+
+    app.listen(PORT, () => {
+      console.log(
+        `🚀 Server running on port ${PORT}`
+      );
     });
   })
   .catch((error) => {
-    console.error("❌ MongoDB connection failed:", error.message);
+    console.error(
+      "❌ MongoDB connection failed:",
+      error.message
+    );
   });

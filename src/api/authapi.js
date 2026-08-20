@@ -1,9 +1,19 @@
-import api from "./axios";
+import axios from "axios";
 
-export const login = (credentials) => {
-  return api.post("/auth/login", credentials);   
-};
+const API_URL = "http://localhost:5000/api/auth";
 
-export const register = (data) => {
-  return api.post("/auth/register", data);
-};
+export async function login(credentials) {
+  return axios.post(`${API_URL}/login`, credentials);
+}
+
+export async function register(userData) {
+  return axios.post(`${API_URL}/register`, userData);
+}
+
+export async function requestPasswordReset(email) {
+  return axios.post(`${API_URL}/forgot-password`, { email });
+}
+
+export async function resetPassword(data) {
+  return axios.post(`${API_URL}/reset-password`, data);
+}

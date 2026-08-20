@@ -1,79 +1,92 @@
 import { useEffect, useState } from "react";
-import { useTasks, useAuth } from "../../hooks";
-import { TASK_STATUS } from "../../constants";
-import Loader from "../../components/Loader";
+import axios from "axios";
 import Button from "../../components/Button";
+import Loader from "../../components/Loader";
 import { jsPDF } from "jspdf";
 import "./Report.css";
 
+const API_URL = "http://localhost:5000/api";
+
 export default function Report() {
-  // =========================
-  // LOGGED-IN USER
-  // =========================
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const { user } = useAuth();
-
-  // =========================
-  // TASKS
-  // =========================
-
-  const {
-    tasks,
-    loading,
-    editTask,
-  } = useTasks();
-
-  // =========================
-  // NOTE
-  // =========================
-
-  const [note, setNote] = useState("");
-
-  // =========================
-  // LOAD SAVED NOTE
-  // =========================
+  // ==========================================
+  // LOAD REPORT
+  // ==========================================
 
   useEffect(() => {
-    const savedNote = localStorage.getItem(
-      "taskline_report_note"
-    );
-
-    if (savedNote) {
-      setNote(savedNote);
-    }
+    loadReport();
   }, []);
 
-  // =========================
-  // SAVE NOTE
-  // =========================
+  async function loadReport() {
+    try {
+      const token = localStorage.getItem("token");
 
-  function handleSaveNote() {
-    localStorage.setItem(
-      "taskline_report_note",
-      note
-    );
+      const response = await axios.get(
+        `${API_URL}/tasks/report`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    alert("Note saved successfully.");
+      setTasks(response.data.tasks || []);
+    } catch (error) {
+      console.error(
+        "Failed to load report:",
+        error
+      );
+
+      alert(
+        error?.response?.data?.message ||
+          "Failed to load report."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
-  // =========================
-  // TOGGLE TASK
-  // =========================
+  // ==========================================
+  // GROUP TASKS BY USER
+  // ==========================================
 
-  function handleToggleTask(task) {
-    const newStatus =
-      task.status === TASK_STATUS.DONE
-        ? TASK_STATUS.TODO
-        : TASK_STATUS.DONE;
+  const groupedUsers = tasks.reduce(
+    (groups, task) => {
+      const user = task.user;
 
-    editTask(task.id, {
-      status: newStatus,
-    });
-  }
+      if (!user) {
+        return groups;
+      }
 
-  // =========================
+      const userId = user._id || user.id;
+
+      if (!groups[userId]) {
+        groups[userId] = {
+          id: userId,
+          name: user.name || "Unknown User",
+          email: user.email || "",
+          tasks: [],
+        };
+      }
+
+      groups[userId].tasks.push(task);
+
+      return groups;
+    },
+    {}
+  );
+
+  const users = Object.values(groupedUsers);
+
+  // ==========================================
   // EXPORT PDF
-  // =========================
+  // ONLY:
+  // PROJECT
+  // MODULE
+  // ACTIVITY
+  // ==========================================
 
   function handleExportPdf() {
     const doc = new jsPDF();
@@ -88,20 +101,9 @@ export default function Report() {
 
     let y = 20;
 
-    // =========================
-    // EXPORT DATE
-    // =========================
-
-    const exportDate =
-      new Date().toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      });
-
-    // =========================
+    // ==========================================
     // PDF TITLE
-    // =========================
+    // ==========================================
 
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
@@ -112,38 +114,20 @@ export default function Report() {
       y
     );
 
-    y += 12;
+    y += 10;
 
-    // =========================
-    // USER NAME
-    // =========================
-
-    doc.setFontSize(13);
+    doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
 
     doc.text(
-      `Name: ${user?.name || "User"}`,
-      margin,
-      y
-    );
-
-    y += 8;
-
-    // =========================
-    // DATE
-    // =========================
-
-    doc.text(
-      `Date: ${exportDate}`,
+      `Generated: ${new Date().toLocaleString(
+        "en-IN"
+      )}`,
       margin,
       y
     );
 
     y += 12;
-
-    // =========================
-    // LINE
-    // =========================
 
     doc.line(
       margin,
@@ -154,131 +138,178 @@ export default function Report() {
 
     y += 12;
 
-    // =========================
-    // TASKS HEADING
-    // =========================
+    // ==========================================
+    // NO DATA
+    // ==========================================
 
-    doc.setFontSize(17);
-    doc.setFont("helvetica", "bold");
+    if (users.length === 0) {
+      doc.setFontSize(12);
 
-    doc.text(
-      "Tasks",
-      margin,
-      y
-    );
-
-    y += 10;
-
-    // =========================
-    // TASKS
-    // =========================
-
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-
-    if (tasks.length === 0) {
       doc.text(
         "No tasks available.",
         margin,
         y
       );
-
-      y += 10;
-    } else {
-      tasks.forEach((task, index) => {
-        // New page if required
-        if (y > pageHeight - 30) {
-          doc.addPage();
-          y = 20;
-        }
-
-        // Numbered tasks
-        const taskText = `${index + 1}. ${task.title}`;
-
-        // Wrap long task names
-        const taskLines =
-          doc.splitTextToSize(
-            taskText,
-            pageWidth - margin * 2
-          );
-
-        taskLines.forEach((line) => {
-          if (y > pageHeight - 20) {
-            doc.addPage();
-            y = 20;
-          }
-
-          doc.text(
-            line,
-            margin,
-            y
-          );
-
-          y += 7;
-        });
-
-        // Space between tasks
-        y += 3;
-      });
     }
 
-    // =========================
-    // NOTES
-    // =========================
+    // ==========================================
+    // USERS
+    // ==========================================
 
-    y += 8;
+    users.forEach((user) => {
+      if (y > pageHeight - 70) {
+        doc.addPage();
+        y = 20;
+      }
 
-    if (y > pageHeight - 50) {
-      doc.addPage();
-      y = 20;
-    }
+      // ========================================
+      // USER NAME
+      // ========================================
 
-    doc.setFontSize(17);
-    doc.setFont("helvetica", "bold");
+      doc.setFontSize(17);
+      doc.setFont("helvetica", "bold");
 
-    doc.text(
-      "Notes",
-      margin,
-      y
-    );
+      doc.text(
+        user.name,
+        margin,
+        y
+      );
 
-    y += 10;
+      y += 7;
 
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
+      // ========================================
+      // USER EMAIL
+      // ========================================
 
-    if (note.trim()) {
-      const noteLines =
-        doc.splitTextToSize(
-          note,
-          pageWidth - margin * 2
-        );
-
-      noteLines.forEach((line) => {
-        if (y > pageHeight - 20) {
-          doc.addPage();
-          y = 20;
-        }
+      if (user.email) {
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
 
         doc.text(
-          line,
+          user.email,
           margin,
           y
         );
 
-        y += 7;
-      });
-    } else {
-      doc.text(
-        "No notes added.",
-        margin,
-        y
-      );
-    }
+        y += 10;
+      }
 
-    // =========================
-    // PDF FOOTER
-    // =========================
+      // ========================================
+      // TASKS
+      // ========================================
+
+      user.tasks.forEach((task, index) => {
+        if (y > pageHeight - 60) {
+          doc.addPage();
+          y = 20;
+        }
+
+        // ----------------------------------------
+        // PROJECT
+        // ----------------------------------------
+
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+
+        doc.text(
+          "Project:",
+          margin,
+          y
+        );
+
+        doc.setFont("helvetica", "normal");
+
+        const projectText =
+          task.projectName || "-";
+
+        doc.text(
+          projectText,
+          margin + 28,
+          y
+        );
+
+        y += 7;
+
+        // ----------------------------------------
+        // MODULE
+        // ----------------------------------------
+
+        doc.setFont("helvetica", "bold");
+
+        doc.text(
+          "Module:",
+          margin,
+          y
+        );
+
+        doc.setFont("helvetica", "normal");
+
+        const moduleText =
+          task.module || "-";
+
+        doc.text(
+          moduleText,
+          margin + 28,
+          y
+        );
+
+        y += 7;
+
+        // ----------------------------------------
+        // ACTIVITY
+        // ----------------------------------------
+
+        doc.setFont("helvetica", "bold");
+
+        doc.text(
+          "Activity:",
+          margin,
+          y
+        );
+
+        doc.setFont("helvetica", "normal");
+
+        const activityText =
+          task.taskName || "-";
+
+        const activityLines =
+          doc.splitTextToSize(
+            activityText,
+            pageWidth - margin * 2 - 28
+          );
+
+        activityLines.forEach((line) => {
+          doc.text(
+            line,
+            margin + 28,
+            y
+          );
+
+          y += 6;
+        });
+
+        y += 5;
+
+        // ----------------------------------------
+        // SEPARATOR
+        // ----------------------------------------
+
+        doc.line(
+          margin,
+          y,
+          pageWidth - margin,
+          y
+        );
+
+        y += 8;
+      });
+
+      y += 5;
+    });
+
+    // ==========================================
+    // FOOTER
+    // ==========================================
 
     const totalPages =
       doc.internal.getNumberOfPages();
@@ -291,10 +322,7 @@ export default function Report() {
       doc.setPage(page);
 
       doc.setFontSize(9);
-      doc.setFont(
-        "helvetica",
-        "normal"
-      );
+      doc.setFont("helvetica", "normal");
 
       doc.text(
         `Taskline Report - Page ${page} of ${totalPages}`,
@@ -303,90 +331,61 @@ export default function Report() {
       );
     }
 
-    // =========================
-    // DOWNLOAD PDF
-    // =========================
+    // ==========================================
+    // DOWNLOAD
+    // ==========================================
 
-    const safeName = (
-      user?.name || "User"
-    ).replace(
-      /[^a-z0-9]/gi,
-      "_"
-    );
-
-    const fileDate =
-      new Date()
-        .toLocaleDateString("en-IN")
-        .replace(/\//g, "-");
+    const date = new Date()
+      .toLocaleDateString("en-IN")
+      .replace(/\//g, "-");
 
     doc.save(
-      `Taskline_Report_${safeName}_${fileDate}.pdf`
+      `Taskline_Report_${date}.pdf`
     );
   }
 
-  // =========================
+  // ==========================================
   // LOADING
-  // =========================
+  // ==========================================
 
   if (loading) {
     return (
       <div className="page-loader">
-        <Loader label="Loading report…" />
+        <Loader label="Loading report..." />
       </div>
     );
   }
 
-  // =========================
+  // ==========================================
   // UI
-  // =========================
+  // ==========================================
 
   return (
-    <div className="page">
+    <div className="page report-page">
 
-      {/* =========================
-          REPORT HEADER
-      ========================= */}
+      {/* =====================================
+          HEADER
+      ===================================== */}
 
       <div className="report-header">
 
-        <div>
-          <h1>Report</h1>
-
-          <p className="report-user">
-            <strong>
-              {user?.name || "User"}
-            </strong>
-          </p>
-        </div>
+        <h1>Report</h1>
 
         <Button
           onClick={handleExportPdf}
         >
-          ⬇ Export PDF
+          ↓ Export PDF
         </Button>
 
       </div>
 
-      {/* =========================
-          TASKS
-      ========================= */}
+      {/* =====================================
+          REPORT CONTENT
+      ===================================== */}
 
-      <div className="report-panel">
+      <div className="report-content">
 
-        <div className="report-panel__header">
-
-          <h2>Tasks</h2>
-
-          <span className="task-count">
-            {tasks.length}{" "}
-            {tasks.length === 1
-              ? "task"
-              : "tasks"}
-          </span>
-
-        </div>
-
-        {tasks.length === 0 ? (
+        {users.length === 0 ? (
 
           <p className="report-empty">
             No tasks available.
@@ -394,89 +393,118 @@ export default function Report() {
 
         ) : (
 
-          <div className="report-task-list">
+          users.map((user) => (
 
-            {tasks.map((task) => {
+            <div
+              className="user-report"
+              key={user.id}
+            >
 
-              const isDone =
-                task.status ===
-                TASK_STATUS.DONE;
+              {/* =================================
+                  USER
+              ================================= */}
 
-              return (
-                <div
-                  className={`report-task ${
-                    isDone
-                      ? "report-task--done"
-                      : ""
-                  }`}
-                  key={task.id}
-                >
+              <div className="user-report__header">
 
-                  <label className="report-task__left">
+                <div>
 
-                    <input
-                      type="checkbox"
-                      checked={isDone}
-                      onChange={() =>
-                        handleToggleTask(task)
-                      }
-                    />
+                  <h2>
+                    {user.name}
+                  </h2>
 
-                    <span>
-                      {task.title}
-                    </span>
-
-                  </label>
-
-                  <span
-                    className={`report-task__status ${
-                      isDone
-                        ? "report-task__status--done"
-                        : "report-task__status--todo"
-                    }`}
-                  >
-                    {isDone
-                      ? "Completed"
-                      : "Incomplete"}
-                  </span>
+                  {user.email && (
+                    <p>
+                      {user.email}
+                    </p>
+                  )}
 
                 </div>
-              );
 
-            })}
+              </div>
 
-          </div>
+              {/* =================================
+                  TASK LIST
+              ================================= */}
 
+              <div className="report-task-list">
+
+                {user.tasks.map((task) => {
+
+                  const taskId =
+                    task._id || task.id;
+
+                  return (
+
+                    <div
+                      className="report-task"
+                      key={taskId}
+                    >
+
+                      <div className="report-task__content">
+
+                        {/* =========================
+                            PROJECT
+                        ========================= */}
+
+                        <div className="report-field">
+
+                          <span className="report-field__label">
+                            Project
+                          </span>
+
+                          <span className="report-field__value">
+                            {task.projectName ||
+                              "-"}
+                          </span>
+
+                        </div>
+
+                        {/* =========================
+                            MODULE
+                        ========================= */}
+
+                        <div className="report-field">
+
+                          <span className="report-field__label">
+                            Module
+                          </span>
+
+                          <span className="report-field__value">
+                            {task.module ||
+                              "-"}
+                          </span>
+
+                        </div>
+
+                        {/* =========================
+                            ACTIVITY
+                        ========================= */}
+
+                        <div className="report-field">
+
+                          <span className="report-field__label">
+                            Activity
+                          </span>
+
+                          <span className="report-field__value">
+                            {task.taskName ||
+                              "-"}
+                          </span>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+                  );
+                })}
+
+              </div>
+
+            </div>
+
+          ))
         )}
-
-      </div>
-
-      {/* =========================
-          NOTES
-      ========================= */}
-
-      <div className="report-panel report-notes">
-
-        <h2>Notes</h2>
-
-        <textarea
-          className="report-notes__input"
-          placeholder="Write your notes here..."
-          value={note}
-          onChange={(e) =>
-            setNote(e.target.value)
-          }
-        />
-
-        <div className="report-notes__actions">
-
-          <Button
-            onClick={handleSaveNote}
-          >
-            Save Note
-          </Button>
-
-        </div>
 
       </div>
 

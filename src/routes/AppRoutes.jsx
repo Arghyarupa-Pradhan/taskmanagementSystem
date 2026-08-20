@@ -1,24 +1,42 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+
 import MainLayout from "../layouts/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
 
 import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
+
 import Dashboard from "../pages/dashboard/Dashboard";
 import TaskBoard from "../pages/tasks/TaskBoard";
 import TaskDetail from "../pages/tasks/TaskDetail";
 import Report from "../pages/report/Report";
 import Profile from "../pages/profile/Profile";
+
 import NotFound from "../pages/NotFound";
+
 import { ROUTES } from "../constants";
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
 
+      {/* Default route */}
+      <Route
+        path="/"
+        element={
+          <Navigate
+            to={ROUTES.DASHBOARD}
+            replace
+          />
+        }
+      />
+
+      {/* ================= PUBLIC ROUTES ================= */}
+
+      {/* Login */}
       <Route
         path={ROUTES.LOGIN}
         element={
@@ -27,6 +45,18 @@ export default function AppRoutes() {
           </PublicRoute>
         }
       />
+
+      {/* Register */}
+      <Route
+        path={ROUTES.REGISTER}
+        element={
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        }
+      />
+
+      {/* Forgot Password */}
       <Route
         path={ROUTES.FORGOT_PASSWORD}
         element={
@@ -35,6 +65,8 @@ export default function AppRoutes() {
           </PublicRoute>
         }
       />
+
+      {/* Reset Password */}
       <Route
         path={ROUTES.RESET_PASSWORD}
         element={
@@ -44,6 +76,8 @@ export default function AppRoutes() {
         }
       />
 
+      {/* ================= PROTECTED ROUTES ================= */}
+
       <Route
         element={
           <ProtectedRoute>
@@ -51,14 +85,44 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-        <Route path={ROUTES.TASKS} element={<TaskBoard />} />
-        <Route path={ROUTES.TASK_DETAIL} element={<TaskDetail />} />
-        <Route path={ROUTES.REPORT} element={<Report />} />
-        <Route path={ROUTES.PROFILE} element={<Profile />} />
+        {/* Dashboard */}
+        <Route
+          path={ROUTES.DASHBOARD}
+          element={<Dashboard />}
+        />
+
+        {/* Tasks */}
+        <Route
+          path={ROUTES.TASKS}
+          element={<TaskBoard />}
+        />
+
+        {/* Task Detail */}
+        <Route
+          path={ROUTES.TASK_DETAIL}
+          element={<TaskDetail />}
+        />
+
+        {/* Report */}
+        <Route
+          path={ROUTES.REPORT}
+          element={<Report />}
+        />
+
+        {/* Profile */}
+        <Route
+          path={ROUTES.PROFILE}
+          element={<Profile />}
+        />
       </Route>
 
-      <Route path="*" element={<NotFound />} />
+      {/* ================= 404 ================= */}
+
+      <Route
+        path="*"
+        element={<NotFound />}
+      />
+
     </Routes>
   );
 }

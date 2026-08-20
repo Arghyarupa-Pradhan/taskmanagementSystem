@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { useAuth } from "../../hooks";
-import { validateLogin } from "../../utils/validators";
 import { ROUTES } from "../../constants";
 
-export default function Login() {
-  const { login } = useAuth();
+export default function Register() {
+  const { register } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [form, setForm] = useState({
+    name: "",
     email: "",
     password: "",
   });
@@ -18,9 +17,6 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
-
-  const from =
-    location.state?.from?.pathname || ROUTES.DASHBOARD;
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -31,29 +27,45 @@ export default function Login() {
     }));
   }
 
+  function validateForm() {
+    const newErrors = {};
+
+    if (!form.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+
+    if (!form.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+      newErrors.email = "Enter a valid email";
+    }
+
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    } else if (form.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    return newErrors;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
 
-    const validationErrors = validateLogin(form);
-
+    const validationErrors = validateForm();
     setErrors(validationErrors);
 
-    if (Object.keys(validationErrors).length > 0) {
-      return;
-    }
+    if (Object.keys(validationErrors).length > 0) return;
 
     setSubmitting(true);
     setServerError("");
 
     try {
-      await login(form);
-
-      navigate(from, {
-        replace: true,
-      });
+      await register(form);
+      navigate(ROUTES.LOGIN, { replace: true });
     } catch (err) {
       setServerError(
-        err.message || "Something went wrong. Try again."
+        err.message || "Registration failed. Please try again."
       );
     } finally {
       setSubmitting(false);
@@ -64,25 +76,38 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-card">
 
-        {/* Brand */}
         <div className="auth-card__brand">
-          <span
-            className="brand-mark"
-            aria-hidden="true"
-          />
-
+          <span className="brand-mark" aria-hidden="true" />
           <span>Taskline</span>
         </div>
 
-        {/* Heading */}
-        <h1>Welcome back</h1>
+        <h1>Create an account</h1>
 
         <p className="auth-card__subtitle">
-          Sign in to keep your work moving.
+          Sign up to start managing your tasks.
         </p>
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit} noValidate>
+
+          {/* Name */}
+          <label className="field">
+            <span>Name</span>
+
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="Your name"
+              autoComplete="name"
+            />
+
+            {errors.name && (
+              <span className="field__error">
+                {errors.name}
+              </span>
+            )}
+          </label>
 
           {/* Email */}
           <label className="field">
@@ -114,7 +139,7 @@ export default function Login() {
               value={form.password}
               onChange={handleChange}
               placeholder="••••••••"
-              autoComplete="current-password"
+              autoComplete="new-password"
             />
 
             {errors.password && (
@@ -124,42 +149,25 @@ export default function Login() {
             )}
           </label>
 
-          {/* Server Error */}
+          {/* Server error */}
           {serverError && (
             <p className="field__error field__error--form">
               {serverError}
             </p>
           )}
 
-          {/* Forgot Password */}
-          <div className="auth-card__row">
-            <Link to={ROUTES.FORGOT_PASSWORD}>
-              Forgot password?
-            </Link>
-          </div>
-
-          {/* Sign In Button */}
           <Button
             type="submit"
             disabled={submitting}
             className="auth-card__submit"
           >
-            {submitting ? "Signing in…" : "Sign in"}
+            {submitting ? "Creating account…" : "Create account"}
           </Button>
         </form>
 
-        {/* Register Link */}
         <p className="auth-card__hint">
-          Don't have an account?{" "}
-          <Link to={ROUTES.REGISTER}>
-            Register
-          </Link>
-        </p>
-
-        {/* Demo Information */}
-        <p className="auth-card__hint">
-          This is a frontend-only demo — any email and a
-          6+ character password will sign you in.
+          Already have an account?{" "}
+          <Link to={ROUTES.LOGIN}>Sign in</Link>
         </p>
 
       </div>

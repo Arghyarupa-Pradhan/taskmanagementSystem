@@ -1,29 +1,263 @@
-/* =========================
-   TOP RIGHT USER
-========================= */
+/* =========================================================
+   GLOBAL RESET
+========================================================= */
 
-.user-menu {
-  position: relative;
-  display: flex;
-  align-items: center;
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 
-/* Avatar button */
+/* =========================================================
+   APP SHELL
+========================================================= */
 
-.user-avatar-button {
-  appearance: none;
-  -webkit-appearance: none;
+.app-shell {
+  width: 100%;
+  height: 100vh;
 
-  background: transparent;
+  display: grid;
+
+  /* IMPORTANT:
+     Sidebar and grid column use the same width */
+  grid-template-columns: 260px minmax(0, 1fr);
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar {
+  width: 100%;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #111619;
+  color: #ffffff;
+
+  overflow: hidden;
+
+  flex-shrink: 0;
+
+  margin: 0;
+  padding: 0;
+
+  box-sizing: border-box;
+
+  grid-column: 1;
+  grid-row: 1;
+
+  z-index: 1000;
+}
+
+
+/* =========================================================
+   SIDEBAR BRAND
+========================================================= */
+
+.sidebar__brand {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 22px 24px;
+  margin: 0;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  line-height: 1;
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   BRAND MARK
+========================================================= */
+
+.brand-mark {
+  width: 22px;
+  height: 22px;
+
+  display: inline-block;
+
+  background: #287f6b;
+
+  border-radius: 5px;
+
+  position: relative;
+
+  flex-shrink: 0;
+}
+
+.brand-mark::after {
+  content: "";
+
+  position: absolute;
+
+  width: 8px;
+  height: 8px;
+
+  background: #ffffff;
+
+  border-radius: 2px;
+
+  top: 7px;
+  left: 7px;
+}
+
+
+/* =========================================================
+   SIDEBAR NAV
+========================================================= */
+
+.sidebar__nav {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+
+  padding: 10px 16px;
+  margin: 0;
+
+  flex-shrink: 0;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   SIDEBAR LINK
+========================================================= */
+
+.sidebar__link {
+  width: 100%;
+  min-width: 0;
+
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 0 16px;
+
+  color: #d6d9dc;
+
+  text-decoration: none;
+
+  border-radius: 7px;
+
+  font-size: 15px;
+
+  white-space: nowrap;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.sidebar__link:hover {
+  background: #1d2528;
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   ACTIVE LINK
+========================================================= */
+
+.sidebar__link--active {
+  background: #287f6b;
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   SIDEBAR ICON
+========================================================= */
+
+.sidebar__icon {
+  width: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   SIDEBAR USER
+========================================================= */
+
+.sidebar__user {
+  width: calc(100% - 32px);
+
+  margin: auto 16px 16px;
+
+  padding: 12px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  background: #171d20;
 
   border: none;
 
-  outline: none;
+  border-radius: 8px;
 
-  padding: 0;
-  margin: 0;
+  color: #ffffff;
 
+  text-align: left;
+
+  cursor: pointer;
+
+  flex-shrink: 0;
+
+  min-width: 0;
+}
+
+
+/* =========================================================
+   SIDEBAR USER AVATAR
+========================================================= */
+
+.sidebar__user .avatar {
   width: 34px;
   height: 34px;
 
@@ -31,50 +265,243 @@
   align-items: center;
   justify-content: center;
 
-  cursor: pointer;
+  flex-shrink: 0;
 
-  box-shadow: none;
-}
+  background: #287f6b;
 
-
-/* Remove square/border when clicked */
-
-.user-avatar-button:hover,
-.user-avatar-button:focus,
-.user-avatar-button:focus-visible,
-.user-avatar-button:active {
-  background: transparent;
-  border: none;
-  outline: none;
-  box-shadow: none;
-}
-
-
-/* Avatar */
-
-.user-avatar-button .avatar {
-  width: 32px;
-  height: 32px;
+  color: #ffffff;
 
   border-radius: 50%;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   SIDEBAR USER INFO
+========================================================= */
+
+.sidebar__user-info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.sidebar__user-info strong {
+  font-size: 14px;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+.sidebar__user-info small {
+  font-size: 12px;
+
+  color: #9ca3af;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   MAIN AREA
+========================================================= */
+
+.app-shell__main {
+  width: 100%;
+  height: 100vh;
+
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  grid-column: 2;
+  grid-row: 1;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   TOPBAR
+========================================================= */
+
+.topbar {
+  width: 100%;
+
+  height: 70px;
+  min-height: 70px;
+
+  display: flex;
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  padding: 0 24px;
+
+  margin: 0;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  box-sizing: border-box;
+
+  position: relative;
+
+  z-index: 9000;
+
+  overflow: visible;
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   TOPBAR SPACER
+========================================================= */
+
+.topbar__spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+
+/* =========================================================
+   USER MENU
+========================================================= */
+
+.user-menu {
+  position: relative;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  cursor: pointer;
+  flex-shrink: 0;
+
+  z-index: 10000;
 }
 
 
-/* =========================
+/* =========================================================
+   USER AVATAR BUTTON
+========================================================= */
+
+.user-avatar-button {
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 36px;
+  height: 36px;
+
+  padding: 0;
+  margin: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: transparent !important;
+
+  border: none !important;
+
+  border-radius: 50%;
+
+  outline: none !important;
+
+  box-shadow: none !important;
+
+  cursor: pointer;
+
+  flex-shrink: 0;
+}
+
+.user-avatar-button:hover,
+.user-avatar-button:focus,
+.user-avatar-button:focus-visible,
+.user-avatar-button:active {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+
+/* =========================================================
+   TOP AVATAR
+========================================================= */
+
+.user-avatar-button .avatar {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #287f6b;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  line-height: 1;
+
+  cursor: pointer;
+
+  user-select: none;
+
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.user-avatar-button:hover .avatar {
+  transform: scale(1.04);
+  opacity: 0.95;
+}
+
+
+/* =========================================================
    EMAIL POPUP
-========================= */
+========================================================= */
 
 .user-email-popup {
   position: absolute;
 
-  top: 42px;
+  top: calc(100% + 8px);
   right: 0;
+
+  min-width: 200px;
+  max-width: 300px;
+
+  padding: 11px 15px;
+
+  box-sizing: border-box;
 
   background: #ffffff;
 
@@ -82,20 +509,624 @@
 
   border-radius: 8px;
 
-  padding: 10px 14px;
-
-  min-width: 200px;
-
   color: #222222;
 
   font-size: 14px;
-
   font-weight: 500;
 
+  line-height: 1.4;
+
   white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
 
   box-shadow:
     0 5px 15px rgba(0, 0, 0, 0.12);
 
-  z-index: 9999;
+  z-index: 99999;
+}
+
+
+/* =========================================================
+   EMAIL POPUP ARROW
+========================================================= */
+
+.user-email-popup::before {
+  content: "";
+
+  position: absolute;
+
+  top: -6px;
+  right: 13px;
+
+  width: 10px;
+  height: 10px;
+
+  background: #ffffff;
+
+  border-left: 1px solid #e5e7eb;
+  border-top: 1px solid #e5e7eb;
+
+  transform: rotate(45deg);
+}
+
+
+/* =========================================================
+   TOPBAR RIGHT
+========================================================= */
+
+.topbar__right {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 0;
+
+  position: relative;
+
+  z-index: 10000;
+}
+
+
+/* =========================================================
+   SIGN OUT
+========================================================= */
+
+.topbar__logout {
+  flex-shrink: 0;
+
+  padding: 9px 16px;
+
+  background: #ffffff;
+
+  border: 1px solid #e0e0e0;
+
+  border-radius: 7px;
+
+  color: #111827;
+
+  font-size: 14px;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+}
+
+.topbar__logout:hover {
+  background: #f5f5f5;
+}
+
+
+/* =========================================================
+   PAGE CONTENT
+   ONLY THIS AREA SCROLLS
+========================================================= */
+
+.app-shell__content {
+  width: 100%;
+
+  flex: 1 1 auto;
+
+  min-width: 0;
+  min-height: 0;
+
+  margin: 0;
+  padding: 0;
+
+  overflow-y: auto;
+
+  overflow-x: hidden;
+
+  box-sizing: border-box;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.page {
+  width: 100%;
+
+  min-width: 0;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   PREVENT HORIZONTAL OVERFLOW
+========================================================= */
+
+.app-shell__content > * {
+  max-width: 100%;
+
+  min-width: 0;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   TABLET
+   901px - 1024px
+========================================================= */
+
+@media screen and (max-width: 1024px) and (min-width: 901px) {
+
+  .app-shell {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .topbar {
+    padding: 0 20px;
+  }
+
+  .user-avatar-button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .user-avatar-button .avatar {
+    width: 32px;
+    height: 32px;
+
+    font-size: 12px;
+  }
+
+  .user-email-popup {
+    min-width: 180px;
+
+    max-width: 260px;
+
+    font-size: 13px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   900px AND BELOW
+========================================================= */
+
+@media screen and (max-width: 900px) {
+
+  html,
+  body,
+  #root {
+    width: 100% !important;
+    height: 100% !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: hidden !important;
+  }
+
+
+  /* =======================================================
+     MOBILE APP SHELL
+  ======================================================= */
+
+  .app-shell {
+    width: 100% !important;
+    height: 100vh !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    overflow: hidden !important;
+  }
+
+
+  /* =======================================================
+     MOBILE SIDEBAR
+  ======================================================= */
+
+  .sidebar {
+    width: 100% !important;
+
+    height: auto !important;
+
+    min-height: 0 !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    background: #111619 !important;
+
+    overflow: hidden !important;
+
+    flex-shrink: 0 !important;
+
+    position: relative !important;
+
+    z-index: 1000 !important;
+  }
+
+
+  /* =======================================================
+     MOBILE TASKLINE
+  ======================================================= */
+
+  .sidebar__brand {
+    width: 100% !important;
+
+    height: 58px !important;
+    min-height: 58px !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    justify-content: center !important;
+
+    padding: 10px 16px !important;
+
+    margin: 0 !important;
+
+    font-size: 18px !important;
+  }
+
+
+  /* =======================================================
+     MOBILE NAV
+  ======================================================= */
+
+  .sidebar__nav {
+    width: 100% !important;
+
+    display: grid !important;
+
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr)) !important;
+
+    gap: 6px !important;
+
+    padding: 8px 12px !important;
+
+    margin: 0 !important;
+
+    overflow: hidden !important;
+  }
+
+  .sidebar__link {
+    width: 100% !important;
+
+    min-width: 0 !important;
+
+    min-height: 42px !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    justify-content: center !important;
+
+    gap: 6px !important;
+
+    padding: 0 6px !important;
+
+    font-size: 14px !important;
+
+    white-space: nowrap !important;
+
+    border-radius: 7px !important;
+  }
+
+  .sidebar__icon {
+    width: auto !important;
+
+    flex-shrink: 0 !important;
+  }
+
+
+  /* =======================================================
+     HIDE MOBILE PROFILE
+  ======================================================= */
+
+  .sidebar__user {
+    display: none !important;
+  }
+
+
+  /* =======================================================
+     MOBILE MAIN
+  ======================================================= */
+
+  .app-shell__main {
+    width: 100% !important;
+
+    height: auto !important;
+
+    flex: 1 1 auto !important;
+
+    min-width: 0 !important;
+
+    min-height: 0 !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    overflow: hidden !important;
+  }
+
+
+  /* =======================================================
+     MOBILE TOPBAR
+  ======================================================= */
+
+  .topbar {
+    width: 100% !important;
+
+    height: 60px !important;
+
+    min-height: 60px !important;
+
+    padding: 0 14px !important;
+
+    margin: 0 !important;
+
+    flex-shrink: 0 !important;
+
+    overflow: visible !important;
+  }
+
+
+  /* =======================================================
+     ONLY MOBILE PAGE CONTENT SCROLLS
+  ======================================================= */
+
+  .app-shell__content {
+    width: 100% !important;
+
+    height: auto !important;
+
+    flex: 1 1 auto !important;
+
+    min-width: 0 !important;
+
+    min-height: 0 !important;
+
+    overflow-y: auto !important;
+
+    overflow-x: hidden !important;
+
+    box-sizing: border-box !important;
+
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+
+  .page {
+    width: 100% !important;
+
+    max-width: 100% !important;
+
+    min-width: 0 !important;
+  }
+
+
+  /* =======================================================
+     MOBILE USER MENU
+  ======================================================= */
+
+  .user-menu {
+    position: relative !important;
+
+    z-index: 10000 !important;
+
+    flex-shrink: 0 !important;
+  }
+
+  .user-email-popup {
+    top: calc(100% + 8px) !important;
+
+    right: 0 !important;
+
+    min-width: 180px !important;
+
+    max-width: calc(100vw - 30px) !important;
+
+    padding: 10px 12px !important;
+
+    font-size: 13px !important;
+
+    white-space: nowrap !important;
+
+    z-index: 99999 !important;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   480px AND BELOW
+========================================================= */
+
+@media screen and (max-width: 480px) {
+
+  .sidebar__brand {
+    height: 54px !important;
+
+    min-height: 54px !important;
+
+    padding: 8px 12px !important;
+
+    font-size: 17px !important;
+  }
+
+  .sidebar__nav {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr)) !important;
+
+    gap: 5px !important;
+
+    padding: 6px 8px !important;
+  }
+
+  .sidebar__link {
+    min-height: 38px !important;
+
+    padding: 0 4px !important;
+
+    font-size: 13px !important;
+
+    gap: 4px !important;
+  }
+
+  .topbar {
+    height: 56px !important;
+
+    min-height: 56px !important;
+
+    padding: 0 10px !important;
+  }
+
+  .topbar__logout {
+    padding: 7px 11px !important;
+
+    font-size: 13px !important;
+  }
+
+  .user-avatar-button {
+    width: 32px !important;
+
+    height: 32px !important;
+  }
+
+  .user-avatar-button .avatar {
+    width: 30px !important;
+
+    height: 30px !important;
+
+    font-size: 11px !important;
+  }
+
+  .user-email-popup {
+    min-width: 160px !important;
+
+    max-width: calc(100vw - 20px) !important;
+
+    padding: 9px 11px !important;
+
+    font-size: 12px !important;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+   360px AND BELOW
+========================================================= */
+
+@media screen and (max-width: 360px) {
+
+  .sidebar__brand {
+    height: 50px !important;
+
+    min-height: 50px !important;
+
+    padding: 7px 10px !important;
+
+    font-size: 16px !important;
+  }
+
+  .sidebar__nav {
+    gap: 4px !important;
+
+    padding: 5px !important;
+  }
+
+  .sidebar__link {
+    min-height: 36px !important;
+
+    padding: 0 3px !important;
+
+    font-size: 12px !important;
+
+    gap: 3px !important;
+  }
+
+  .topbar {
+    height: 52px !important;
+
+    min-height: 52px !important;
+
+    padding: 0 8px !important;
+  }
+
+  .topbar__logout {
+    padding: 6px 8px !important;
+
+    font-size: 12px !important;
+  }
+
+  .user-avatar-button {
+    width: 30px !important;
+
+    height: 30px !important;
+  }
+
+  .user-avatar-button .avatar {
+    width: 28px !important;
+
+    height: 28px !important;
+
+    font-size: 10px !important;
+  }
+
+  .user-email-popup {
+    min-width: 150px !important;
+
+    font-size: 12px !important;
+  }
+}
+
+
+/* =========================================================
+   FINAL SCROLL CONTROL
+========================================================= */
+
+html,
+body,
+#root {
+  overflow: hidden !important;
+}
+
+.app-shell {
+  overflow: hidden !important;
+}
+
+.app-shell__main {
+  overflow: hidden !important;
+}
+
+.sidebar {
+  overflow: hidden !important;
+}
+
+.sidebar__nav {
+  overflow: hidden !important;
+}
+
+.topbar {
+  overflow: visible !important;
+}
+
+.app-shell__content {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }

@@ -49,6 +49,18 @@ export function AuthProvider({ children }) {
     return user;
   }, []);
 
+  const register = useCallback(async (userData) => {
+  const response = await authApi.register(userData);
+
+  const { token, user } = response.data;
+
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify(user));
+
+  setUser(user);
+
+  return user;
+}, []);
   // Logout
   const logout = useCallback(async () => {
     localStorage.removeItem("token");
@@ -61,6 +73,7 @@ export function AuthProvider({ children }) {
     user,
     loading,
     login,
+    register,
     logout,
     isAuthenticated: Boolean(user),
   };

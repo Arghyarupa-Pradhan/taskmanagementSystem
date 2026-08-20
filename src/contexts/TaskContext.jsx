@@ -1,293 +1,3 @@
-
-
-// import {
-//   createContext,
-//   useCallback,
-//   useEffect,
-//   useMemo,
-//   useState,
-// } from "react";
-
-// import * as projectService from "../services/projectService";
-// import * as teamService from "../services/teamService";
-// import * as taskApi from "../api/taskapi";
-
-// import { useAuth } from "../hooks/useAuth";
-// import { TASK_STATUS } from "../constants";
-
-// export const TaskContext = createContext(null);
-
-// // Convert backend task → frontend task
-// function normalizeTask(task) {
-//   return {
-//     ...task,
-
-//     // MongoDB ID
-//     id: task._id || task.id,
-
-//     // Backend taskName → frontend title
-//     title: task.taskName || task.title || "",
-
-//     // Backend completed → frontend status
-//     status: task.completed
-//       ? TASK_STATUS.DONE
-//       : TASK_STATUS.TODO,
-
-//     // Backend creationDate → frontend dueDate
-//     dueDate: task.creationDate
-//       ? new Date(task.creationDate).toISOString().split("T")[0]
-//       : "",
-//   };
-// }
-
-// export function TaskProvider({ children }) {
-//   const { user, loading: authLoading } = useAuth();
-
-//   const [tasks, setTasks] = useState([]);
-//   const [projects, setProjects] = useState([]);
-//   const [teamMembers, setTeamMembers] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   // =========================
-//   // LOAD TASKS
-//   // =========================
-
-//   useEffect(() => {
-//     if (authLoading) {
-//       return;
-//     }
-
-//     if (!user) {
-//       setTasks([]);
-//       setLoading(false);
-//       return;
-//     }
-
-//     const loadTasks = async () => {
-//       try {
-//         setLoading(true);
-
-//         const response = await taskApi.getTasks();
-
-//         console.log("Tasks from backend:", response.data);
-
-//         const backendTasks = Array.isArray(response.data)
-//           ? response.data
-//           : response.data.tasks || [];
-
-//         const formattedTasks = backendTasks.map(normalizeTask);
-
-//         setTasks(formattedTasks);
-//       } catch (error) {
-//         console.error(
-//           "Failed to load tasks:",
-//           error.response?.data || error.message
-//         );
-
-//         setTasks([]);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     teamService.ensureSeeded();
-
-//     setProjects(projectService.getProjects());
-//     setTeamMembers(teamService.getTeamMembers());
-
-//     loadTasks();
-//   }, [user, authLoading]);
-
-//   // =========================
-//   // ADD TASK
-//   // =========================
-
-//   const addTask = useCallback(
-//     async (data) => {
-//       try {
-//         const response = await taskApi.createTask({
-//           employeeName: user?.name || "User",
-//           taskName: data.title,
-//           creationDate:
-//             data.dueDate || new Date().toISOString(),
-//           time: new Date().toTimeString().slice(0, 5),
-//           completed: false,
-//           note: data.note || "",
-//         });
-
-//         console.log("Created task:", response.data);
-
-//         const createdRaw =
-//   response.data?.task ||
-//   response.data?.data ||
-//   response.data;
-
-// const task = normalizeTask(createdRaw);
-
-// setTasks((prev) => [task, ...prev]);
-
-// return task;
-//       } catch (error) {
-//         console.error(
-//           "Failed to create task:",
-//           error.response?.data || error.message
-//         );
-
-//         throw error;
-//       }
-//     },
-//     [user]
-//   );
-
-//   // =========================
-//   // EDIT / COMPLETE TASK
-//   // =========================
-
-//   const editTask = useCallback(async (id, updates) => {
-//     try {
-//       const backendUpdates = {};
-
-//       // Frontend status → backend completed
-//       if (updates.status !== undefined) {
-//         backendUpdates.completed =
-//           updates.status === TASK_STATUS.DONE;
-//       }
-
-//       // Frontend title → backend taskName
-//       if (updates.title !== undefined) {
-//         backendUpdates.taskName = updates.title;
-//       }
-
-//       const response = await taskApi.updateTask(
-//         id,
-//         backendUpdates
-//       );
-
-//       console.log("Updated task:", response.data);
-
-//       const updatedTask = normalizeTask(response.data);
-
-//       setTasks((prev) =>
-//         prev.map((task) =>
-//           task.id === id ? updatedTask : task
-//         )
-//       );
-
-//       return updatedTask;
-//     } catch (error) {
-//       console.error(
-//         "Failed to update task:",
-//         error.response?.data || error.message
-//       );
-
-//       throw error;
-//     }
-//   }, []);
-
-//   // =========================
-//   // DELETE TASK
-//   // =========================
-
-//   const removeTask = useCallback(async (id) => {
-//     try {
-//       await taskApi.deleteTask(id);
-
-//       console.log("Deleted task:", id);
-
-//       setTasks((prev) =>
-//         prev.filter((task) => task.id !== id)
-//       );
-//     } catch (error) {
-//       console.error(
-//         "Failed to delete task:",
-//         error.response?.data || error.message
-//       );
-
-//       throw error;
-//     }
-//   }, []);
-
-//   // =========================
-//   // PROJECTS
-//   // =========================
-
-//   const addProject = useCallback((data) => {
-//     const project = projectService.createProject(data);
-
-//     setProjects((prev) => [...prev, project]);
-
-//     return project;
-//   }, []);
-
-//   const removeProject = useCallback((id) => {
-//     projectService.deleteProject(id);
-
-//     setProjects((prev) =>
-//       prev.filter((project) => project.id !== id)
-//     );
-//   }, []);
-
-//   // =========================
-//   // TEAM MEMBERS
-//   // =========================
-
-//   const addTeamMember = useCallback((name) => {
-//     const next = teamService.addTeamMember(name);
-
-//     setTeamMembers(next);
-//   }, []);
-
-//   const removeTeamMember = useCallback((name) => {
-//     const next = teamService.removeTeamMember(name);
-
-//     setTeamMembers(next);
-//   }, []);
-
-//   // =========================
-//   // CONTEXT VALUE
-//   // =========================
-
-//   const value = useMemo(
-//     () => ({
-//       tasks,
-//       projects,
-//       teamMembers,
-//       loading,
-
-//       addTask,
-//       editTask,
-//       removeTask,
-
-//       addProject,
-//       removeProject,
-
-//       addTeamMember,
-//       removeTeamMember,
-//     }),
-//     [
-//       tasks,
-//       projects,
-//       teamMembers,
-//       loading,
-//       addTask,
-//       editTask,
-//       removeTask,
-//       addProject,
-//       removeProject,
-//       addTeamMember,
-//       removeTeamMember,
-//     ]
-//   );
-
-//   return (
-//     <TaskContext.Provider value={value}>
-//       {children}
-//     </TaskContext.Provider>
-//   );
-// }
-
-
-
 import {
   createContext,
   useCallback,
@@ -301,11 +11,14 @@ import * as teamService from "../services/teamService";
 import * as taskApi from "../api/taskapi";
 
 import { useAuth } from "../hooks/useAuth";
-import { TASK_STATUS } from "../constants";
 
 export const TaskContext = createContext(null);
 
-// Convert backend task → frontend task
+
+// =========================================================
+// NORMALIZE BACKEND TASK
+// =========================================================
+
 function normalizeTask(task) {
   return {
     ...task,
@@ -313,115 +26,258 @@ function normalizeTask(task) {
     // MongoDB ID
     id: task._id || task.id,
 
-    // Backend taskName → frontend title
-    title: task.taskName || task.title || "",
+    // New task fields
+    projectName: task.projectName || "",
 
-    // Backend completed → frontend status
-    status: task.completed
-      ? TASK_STATUS.DONE
-      : TASK_STATUS.TODO,
+    module: task.module || "",
 
-    // Backend creationDate → frontend dueDate
-    dueDate: task.creationDate
-      ? new Date(task.creationDate).toISOString().split("T")[0]
-      : "",
+    taskName:
+      task.taskName ||
+      task.task ||
+      "",
+
+    priority:
+      task.priority ||
+      "Medium",
+
+    status:
+      task.status ||
+      "Pending",
+
+    timeSpent:
+      task.timeSpent ||
+      "",
+
+    note:
+      task.note ||
+      "",
+
+    // Existing fields
+    completed:
+      Boolean(task.completed),
+
+    employeeName:
+      task.employeeName ||
+      "",
   };
 }
 
+
+// =========================================================
+// TASK PROVIDER
+// =========================================================
+
 export function TaskProvider({ children }) {
-  const { user, loading: authLoading } = useAuth();
+
+  const {
+    user,
+    loading: authLoading,
+  } = useAuth();
+
 
   const [tasks, setTasks] = useState([]);
+
   const [projects, setProjects] = useState([]);
+
   const [teamMembers, setTeamMembers] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
-  // =========================
+
+  // =========================================================
   // LOAD TASKS
-  // =========================
+  // =========================================================
 
   useEffect(() => {
+
     if (authLoading) {
       return;
     }
 
+
     if (!user) {
+
       setTasks([]);
+
       setLoading(false);
+
       return;
     }
 
+
     const loadTasks = async () => {
+
       try {
+
         setLoading(true);
 
-        const response = await taskApi.getTasks();
 
-        console.log("Tasks from backend:", response.data);
+        const response =
+          await taskApi.getTasks();
 
-        const backendTasks = Array.isArray(response.data)
-          ? response.data
-          : response.data.tasks || [];
 
-        const formattedTasks = backendTasks.map(normalizeTask);
-
-        setTasks(formattedTasks);
-      } catch (error) {
-        console.error(
-          "Failed to load tasks:",
-          error.response?.data || error.message
+        console.log(
+          "Tasks from backend:",
+          response.data
         );
 
+
+        const backendTasks =
+          Array.isArray(response.data)
+            ? response.data
+            : response.data?.tasks || [];
+
+
+        const formattedTasks =
+          backendTasks.map(
+            normalizeTask
+          );
+
+
+        setTasks(
+          formattedTasks
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Failed to load tasks:",
+          error.response?.data ||
+            error.message
+        );
+
+
         setTasks([]);
+
       } finally {
+
         setLoading(false);
+
       }
+
     };
 
+
+    // Existing project/team data
     teamService.ensureSeeded();
 
-    setProjects(projectService.getProjects());
-    setTeamMembers(teamService.getTeamMembers());
+
+    setProjects(
+      projectService.getProjects()
+    );
+
+
+    setTeamMembers(
+      teamService.getTeamMembers()
+    );
+
 
     loadTasks();
+
   }, [user, authLoading]);
 
-  // =========================
+
+  // =========================================================
   // ADD TASK
-  // =========================
+  // =========================================================
 
   const addTask = useCallback(
     async (data) => {
+
       try {
-        const response = await taskApi.createTask({
-          employeeName: user?.name || "User",
-          taskName: data.title,
-          creationDate:
-            data.dueDate || new Date().toISOString(),
-          time: new Date().toTimeString().slice(0, 5),
-          completed: false,
-          note: data.note || "",
-        });
 
-        console.log("Created task:", response.data);
+        // =====================================================
+        // DATA SENT TO BACKEND
+        // =====================================================
 
-        // Backend may wrap the created task in { task: {...} } or
-        // { data: {...} } instead of returning it directly — unwrap safely.
+        const taskData = {
+
+          projectName:
+            data.projectName || "",
+
+          module:
+            data.module || "",
+
+          taskName:
+            data.taskName || data.task || "",
+
+          priority:
+            data.priority || "Medium",
+
+          status:
+            data.status || "Pending",
+
+          timeSpent:
+            data.timeSpent || "",
+
+          note:
+            data.note || "",
+
+          employeeName:
+            data.employeeName ||
+            user?.name ||
+            "User",
+        };
+
+
+        console.log(
+          "Creating task with data:",
+          taskData
+        );
+
+
+        // =====================================================
+        // API REQUEST
+        // =====================================================
+
+        const response =
+          await taskApi.createTask(
+            taskData
+          );
+
+
+        console.log(
+          "Created task:",
+          response.data
+        );
+
+
+        // =====================================================
+        // GET CREATED TASK
+        // =====================================================
+
         const createdRaw =
           response.data?.task ||
           response.data?.data ||
           response.data;
 
-        const task = normalizeTask(createdRaw);
 
-        setTasks((prev) => [task, ...prev]);
+        const task =
+          normalizeTask(
+            createdRaw
+          );
+
+
+        // =====================================================
+        // UPDATE FRONTEND LIST
+        // =====================================================
+
+        setTasks((prev) => [
+          task,
+          ...prev,
+        ]);
+
 
         return task;
+
       } catch (error) {
+
         console.error(
           "Failed to create task:",
-          error.response?.data || error.message
+          error.response?.data ||
+            error.message
         );
+
 
         throw error;
       }
@@ -429,155 +285,285 @@ export function TaskProvider({ children }) {
     [user]
   );
 
-  // =========================
-  // EDIT / COMPLETE TASK
-  // =========================
 
-  const editTask = useCallback(async (id, updates) => {
-    try {
-      const backendUpdates = {};
+  // =========================================================
+  // EDIT TASK
+  // =========================================================
 
-      // Frontend status → backend completed
-      if (updates.status !== undefined) {
-        backendUpdates.completed =
-          updates.status === TASK_STATUS.DONE;
+  const editTask = useCallback(
+    async (id, updates) => {
+
+      try {
+
+        const updateData = {
+
+          projectName:
+            updates.projectName,
+
+          module:
+            updates.module,
+
+          taskName:
+            updates.taskName ||
+            updates.task,
+
+          priority:
+            updates.priority,
+
+          status:
+            updates.status,
+
+          timeSpent:
+            updates.timeSpent,
+
+          note:
+            updates.note || "",
+
+          employeeName:
+            updates.employeeName,
+        };
+
+
+        console.log(
+          "Updating task:",
+          updateData
+        );
+
+
+        const response =
+          await taskApi.updateTask(
+            id,
+            updateData
+          );
+
+
+        console.log(
+          "Updated task:",
+          response.data
+        );
+
+
+        const updatedRaw =
+          response.data?.task ||
+          response.data?.data ||
+          response.data;
+
+
+        const updatedTask =
+          normalizeTask(
+            updatedRaw
+          );
+
+
+        setTasks((prev) =>
+          prev.map((task) =>
+            task.id === id
+              ? updatedTask
+              : task
+          )
+        );
+
+
+        return updatedTask;
+
+      } catch (error) {
+
+        console.error(
+          "Failed to update task:",
+          error.response?.data ||
+            error.message
+        );
+
+
+        throw error;
       }
 
-      // Frontend title → backend taskName
-      if (updates.title !== undefined) {
-        backendUpdates.taskName = updates.title;
+    },
+    []
+  );
+
+
+  // =========================================================
+  // DELETE TASK
+  // =========================================================
+
+  const removeTask = useCallback(
+    async (id) => {
+
+      try {
+
+        await taskApi.deleteTask(
+          id
+        );
+
+
+        console.log(
+          "Deleted task:",
+          id
+        );
+
+
+        setTasks((prev) =>
+          prev.filter(
+            (task) =>
+              task.id !== id
+          )
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Failed to delete task:",
+          error.response?.data ||
+            error.message
+        );
+
+
+        throw error;
       }
 
-      const response = await taskApi.updateTask(
-        id,
-        backendUpdates
+    },
+    []
+  );
+
+
+  // =========================================================
+  // PROJECTS
+  // =========================================================
+
+  const addProject = useCallback(
+    (data) => {
+
+      const project =
+        projectService.createProject(
+          data
+        );
+
+
+      setProjects((prev) => [
+        ...prev,
+        project,
+      ]);
+
+
+      return project;
+    },
+    []
+  );
+
+
+  const removeProject =
+    useCallback((id) => {
+
+      projectService.deleteProject(
+        id
       );
 
-      console.log("Updated task:", response.data);
 
-      // Backend may wrap the updated task in { task: {...} } or
-      // { data: {...} } instead of returning it directly — unwrap safely.
-      const updatedRaw =
-        response.data?.task ||
-        response.data?.data ||
-        response.data;
-
-      const updatedTask = normalizeTask(updatedRaw);
-
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === id ? updatedTask : task
+      setProjects((prev) =>
+        prev.filter(
+          (project) =>
+            project.id !== id
         )
       );
 
-      return updatedTask;
-    } catch (error) {
-      console.error(
-        "Failed to update task:",
-        error.response?.data || error.message
-      );
+    }, []);
 
-      throw error;
-    }
-  }, []);
 
-  // =========================
-  // DELETE TASK
-  // =========================
-
-  const removeTask = useCallback(async (id) => {
-    try {
-      await taskApi.deleteTask(id);
-
-      console.log("Deleted task:", id);
-
-      setTasks((prev) =>
-        prev.filter((task) => task.id !== id)
-      );
-    } catch (error) {
-      console.error(
-        "Failed to delete task:",
-        error.response?.data || error.message
-      );
-
-      throw error;
-    }
-  }, []);
-
-  // =========================
-  // PROJECTS
-  // =========================
-
-  const addProject = useCallback((data) => {
-    const project = projectService.createProject(data);
-
-    setProjects((prev) => [...prev, project]);
-
-    return project;
-  }, []);
-
-  const removeProject = useCallback((id) => {
-    projectService.deleteProject(id);
-
-    setProjects((prev) =>
-      prev.filter((project) => project.id !== id)
-    );
-  }, []);
-
-  // =========================
+  // =========================================================
   // TEAM MEMBERS
-  // =========================
+  // =========================================================
 
-  const addTeamMember = useCallback((name) => {
-    const next = teamService.addTeamMember(name);
+  const addTeamMember =
+    useCallback((name) => {
 
-    setTeamMembers(next);
-  }, []);
+      const next =
+        teamService.addTeamMember(
+          name
+        );
 
-  const removeTeamMember = useCallback((name) => {
-    const next = teamService.removeTeamMember(name);
 
-    setTeamMembers(next);
-  }, []);
+      setTeamMembers(next);
 
-  // =========================
+    }, []);
+
+
+  const removeTeamMember =
+    useCallback((name) => {
+
+      const next =
+        teamService.removeTeamMember(
+          name
+        );
+
+
+      setTeamMembers(next);
+
+    }, []);
+
+
+  // =========================================================
   // CONTEXT VALUE
-  // =========================
+  // =========================================================
 
   const value = useMemo(
     () => ({
       tasks,
+
       projects,
+
       teamMembers,
+
       loading,
 
       addTask,
+
       editTask,
+
       removeTask,
 
       addProject,
+
       removeProject,
 
       addTeamMember,
+
       removeTeamMember,
     }),
     [
       tasks,
+
       projects,
+
       teamMembers,
+
       loading,
+
       addTask,
+
       editTask,
+
       removeTask,
+
       addProject,
+
       removeProject,
+
       addTeamMember,
+
       removeTeamMember,
     ]
   );
 
+
+  // =========================================================
+  // PROVIDER
+  // =========================================================
+
   return (
-    <TaskContext.Provider value={value}>
+    <TaskContext.Provider
+      value={value}
+    >
       {children}
     </TaskContext.Provider>
   );
