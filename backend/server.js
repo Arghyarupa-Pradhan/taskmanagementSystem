@@ -23,7 +23,13 @@ const app = express();
 // MIDDLEWARE
 // ==========================================
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://taskmanagementsystem-qtry.onrender.com",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(express.json());
 
