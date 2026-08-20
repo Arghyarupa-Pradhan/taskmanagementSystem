@@ -1,7 +1,15 @@
 const express = require("express");
-const { register, login } = require("../controllers/authController");
+
+const {
+  register,
+  login,
+} = require("../controllers/authController");
 
 const router = express.Router();
+
+// ==========================================
+// REGISTER
+// ==========================================
 
 /**
  * @swagger
@@ -39,7 +47,13 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
+
 router.post("/register", register);
+
+
+// ==========================================
+// LOGIN
+// ==========================================
 
 /**
  * @swagger
@@ -75,6 +89,12 @@ router.post("/register", register);
  *       500:
  *         description: Server error
  */
+
 router.post("/login", login);
+
+
+// ==========================================
+// EXPORT
+// ==========================================
 
 module.exports = router;

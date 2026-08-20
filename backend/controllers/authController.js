@@ -1,8 +1,10 @@
-const User = require("../models/User");
+const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+// ==========================================
 // REGISTER
+// ==========================================
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -16,7 +18,9 @@ const register = async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
 
     if (existingUser) {
       return res.status(400).json({
@@ -30,32 +34,33 @@ const register = async (req, res) => {
 
     // Create user
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
       password: hashedPassword,
     });
+
     // Create JWT token
-const token = jwt.sign(
-  {
-    id: user._id,
-    email: user.email,
-  },
-  process.env.JWT_SECRET,
-  {
-    expiresIn: "1d",
-  }
-);
+    const token = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
 
     res.status(201).json({
-  success: true,
-  message: "Registration successful",
-  token,
-  user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-  },
-});
+      success: true,
+      message: "Registration successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
   } catch (error) {
     console.error("Registration error:", error);
 
@@ -66,7 +71,9 @@ const token = jwt.sign(
   }
 };
 
+// ==========================================
 // LOGIN
+// ==========================================
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -80,7 +87,9 @@ const login = async (req, res) => {
     }
 
     // Find user
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
 
     if (!user) {
       return res.status(401).json({
@@ -134,6 +143,9 @@ const login = async (req, res) => {
   }
 };
 
+// ==========================================
+// EXPORT
+// ==========================================
 module.exports = {
   register,
   login,
