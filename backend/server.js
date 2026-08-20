@@ -25,9 +25,22 @@ const app = express();
 
 app.use(
   cors({
-    origin: "https://taskmanagementsystem-qtry.onrender.com",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: [
+      "https://taskmanagementsystem-qtry.onrender.com",
+      "https://6a86c8dc004b6f00084b5f5b--taskmanagement-system.netlify.app",
+    ],
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "PATCH",
+      "OPTIONS",
+    ],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
   })
 );
 
