@@ -5,7 +5,7 @@ import Loader from "../../components/Loader";
 import { jsPDF } from "jspdf";
 import "./Report.css";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://taskmanagement-backend-4vwp.onrender.com/api"; // Replace with your backend API URL
 
 export default function Report() {
   const [tasks, setTasks] = useState([]);

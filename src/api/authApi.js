@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/auth";
+const API_URL = "https://taskmanagement-backend-4vwp.onrender.com/api/auth";
 
 export async function login(credentials) {
   return axios.post(`${API_URL}/login`, credentials);
