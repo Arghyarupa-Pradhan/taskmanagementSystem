@@ -15,3 +15,7 @@ export const updateTask = (id, data) => {
 export const deleteTask = (id) => {
   return api.delete(`/tasks/${id}`);
 };
+
+export const getReport = () => {
+  return api.get("/tasks/report");
+};
