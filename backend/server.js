@@ -27,7 +27,7 @@ app.use(
   cors({
     origin: [
       "https://taskmanagementsystem-qtry.onrender.com",
-      "https://6a86c8dc004b6f00084b5f5b--taskmanagement-system.netlify.app",
+      "https://taskmanagement-systemm.netlify.app",
       "http://localhost:5173",
     ],
     methods: [
